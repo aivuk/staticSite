@@ -5,13 +5,15 @@ import System.Directory (getDirectoryContents, doesDirectoryExist, doesFileExist
 import Text.CSV (parseCSVFromFile)
 import Text.Hakyll (hakyll)
 import Control.Monad.Reader (liftIO)
-import Text.Hakyll.Render (renderChain)
+import Text.Hakyll.Render (renderChain, css, static)
 import Text.Hakyll.CreateContext (createPage, combine, combineWithUrl, createCustomPage)
 import Text.Hakyll.ContextManipulations (renderValue)
 import Text.Hakyll.Context 
+import Text.Hakyll.File (directory)
 import Text.Hakyll.HakyllAction 
 import Data.List (dropWhile)
 import Data.Either
+import Data.List (intercalate)
 import qualified Data.Map as M
 
 -- Get Just Two Levels
@@ -48,22 +50,28 @@ urlInLang dict primDir secDir lang = (transDir primDir) ++ "/" ++ (transDir secD
   where
     transDir dir = fst $ (dict M.! lang) M.! dir
 
-createMenu dirs dict primDir secDir lang = (primMenu, secMenu)
+-- Return the Menu in a lang
+
+menuInLang dirs dict primDir secDir lang = (primMenu, secMenu)
   where
     primMenu = foldl (\s (d,_) -> s ++ "<li>" ++ (snd $ (dict M.! lang) M.! d) ++ "</li>\n") "" dirs
     secMenu = concatMap ((foldl (\s d -> s ++ "<li>" ++ (snd $ (dict M.! lang) M.! d) ++ "</li>\n") "").snd) dirs
 
+languages = ["pt", "en", "de"]
+
 main = hakyll "http://it3s.org" $ do
+    directory css "css"
+    directory static "images"
     dirs <- liftIO $ getDirs "conteudo"
     dirsDict <- liftIO $ dirsDict "conteudo"
     forM_ dirs $ \(primaryDir, secondaryDirs)  -> do
         forM_ secondaryDirs $ \secondaryDir -> do
-            forM_ ["pt", "de", "en"] $ \lang -> do
+            forM_ languages $ \lang -> do
                 let url = urlInLang dirsDict primaryDir secondaryDir lang
 
-                    textFile = "conteudo/" ++ primaryDir ++ 
+                    textFile l = "conteudo/" ++ primaryDir ++ 
                                 maybeSecondary ++
-                                "/" ++ lang ++ ".text.markdown"
+                                "/" ++ l ++ ".text.markdown"
                     
                     maybeSecondary = case secondaryDir of
                             [] -> ""
@@ -72,15 +80,31 @@ main = hakyll "http://it3s.org" $ do
                     menu = createCustomPage "" [ ("menuPrim", Left $ primMenu)
                                                , ("menuSec", Left $ secMenu) ] 
 
-                    (primMenu, secMenu) = createMenu dirs dirsDict primaryDir secondaryDir lang
+                    (primMenu, secMenu) = menuInLang dirs dirsDict primaryDir secondaryDir lang
 
                     footer   = createPage $ "conteudo/" ++ lang ++ ".footer.markdown"
 
-                haveFile <- liftIO $ doesFileExist textFile
+                    createLangButtons = do
+                        langLinks <- forM languages $ \l -> do
+                            if l == lang
+                              then return $ "<b>" ++ lang ++ "</b>"
+                              else do
+                                haveFile <- liftIO $ doesFileExist $ textFile l
+                                if haveFile 
+                                  then do
+                                    return $ "<a href=\"/" ++ (urlInLang dirsDict primaryDir secondaryDir l) ++
+                                            "/\">" ++ l ++ "</a>"
+                                  else return ""
+                        return $ createCustomPage "" [ ("changeLanguage", Left $ intercalate " | " $ filter (/= "") langLinks) ]
+
+                changeLanguage <- createLangButtons
+                haveFile <- liftIO $ doesFileExist $ textFile lang
                 when haveFile $ do
                     renderChain [ "templates/index.html" ] $ 
                                 combineWithUrl (url ++ "/index.html")
-                                (createPage textFile)
+                                (createPage $ textFile lang) 
                                 footer 
                                 `combine`
                                 menu
+                                `combine`
+                                changeLanguage 
