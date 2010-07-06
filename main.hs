@@ -11,9 +11,8 @@ import Text.Hakyll.ContextManipulations (renderValue)
 import Text.Hakyll.Context 
 import Text.Hakyll.File (directory)
 import Text.Hakyll.HakyllAction 
-import Data.List (dropWhile)
+import Data.List (dropWhile, sort, intercalate, sortBy)
 import Data.Either
-import Data.List (intercalate, sortBy)
 import qualified Data.Map as M
 
 -- Get Just Two Levels
@@ -63,7 +62,7 @@ menuInLang dirs dict primDir secDir lang = (primMenu ordDirs, secMenu ordDirs)
                     Nothing -> ("?","?")
                     Just ln -> ln
 
-    ordDirs = sortBy (\x y -> compare (fst x) (fst y)) dirs
+    ordDirs = map (fmap sort) $ sortBy (\x y -> compare (fst x) (fst y)) dirs
 
     select d p | p == d    =  " class=\"selected\"" 
                | otherwise =  ""
