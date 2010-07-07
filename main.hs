@@ -33,13 +33,15 @@ dirsDict directory = do
     let cleanStrings = map $ map (dropWhile (== ' '))
     dirs <- getDirs directory
     dictData <- foldM (\l (d, s) -> do
-                Right pf <- parseCSVFromFile (directory ++ "/" ++ d ++ "/menu")
-                let pd = cleanStrings $ filter (/= [""]) pf
-                sd <- forM s $ \s' -> do
-                    Right sf <- parseCSVFromFile (directory ++ "/" ++ 
-                                                  d ++ "/" ++ s' ++ "/menu")
-                    return $ (s', cleanStrings $ filter (/= [""]) sf)
-                return $ ((d, pd):sd) ++ l) [] dirs
+                    Right pf <- parseCSVFromFile (directory ++ "/" ++ d ++ 
+                                                  "/menu")
+                    let pd = cleanStrings $ filter (/= [""]) pf
+                    sd <- forM s $ \s' -> do
+                        Right sf <- parseCSVFromFile (directory ++ "/" ++ 
+                                                      d ++ "/" ++ s' ++ 
+                                                      "/menu")
+                        return $ (s', cleanStrings $ filter (/= [""]) sf)
+                    return $ ((d, pd):sd) ++ l) [] dirs
     let dict = M.fromListWith M.union $ [ (l, M.fromList [ (d, (menu, dir)) ])
                                         | (d, pd) <- dictData, 
                                           [l, dir, menu] <- pd ]

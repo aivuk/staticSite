@@ -1,0 +1,86 @@
+﻿<html>
+    <head>
+    <link rel="shortcut icon" href="/images/favicon.ico" type="image/x-icon" /> 
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style type="text/css" media="all">@import "/css/it3s.css";</style>
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript">
+        function selectMenu (menuId) {
+            $("#menu-left-right > ul:not(#" + menuId + ")").css({"display": "none"}).removeClass("selected");
+            $("#menu-left-left > ul > li.selected").removeClass("selected");
+
+            $("#menu-left-right > ul#" + menuId).css({"display": "block"}).addClass("selected");
+            $("#menu-left-left > ul > li#" + menuId).addClass("selected");
+        }
+
+        $(document).ready(function() {
+            $("#menu-left-right > ul:not(.selected)").css("display", "none");
+            $("#menu-left-right > ul > li.selected").css({"color": "black"});
+            $("#menu-left-left > ul > li.selected > a").css({"color": "black"});
+        });
+    </script>
+    </head>
+    <body>
+        <div id="container">
+        <div id="header">
+            <div id="logo">
+                <img src="/images/logo.png"/>
+            </div>
+            <div id="languages">
+                $changeLanguage
+            </div>
+        </div>
+        <div id="main">
+            <div id="left">
+                <div id="menu-left">
+                    <div id="menu-left-left">
+                        <ul>
+                            $menuPrim
+                        </ul>
+                    </div>
+                    <div id="menu-left-right">
+                            $menuSec
+                    </div>
+                </div>
+            </div>
+            <div id="center">
+                $body
+            </div>
+            <div id="right">
+                <div id="menu-right">
+                    <ul>
+                        <li> Contatos </li>
+                        <li> Blog </li>
+                        <li> Facebook </li>
+                        <li> Orkut </li>
+                    </ul>
+                </div>  
+                <div id="twitter-box">
+                <div id="twitter-top">
+                <!--<img src="images/twitterbox_top.png">-->
+                <!-- <div id="twitter-top">&nbsp;</div> -->
+                </div>
+                <div id="twitter-body">
+                    <h4>twitter updates</h4>
+                    <ul>
+                        <li>
+                        it3s RT @cosacnaify Ela cultivava com afeto suas memórias. Leia trechos de "Louise Bourgeois - destruição do pai, reconstrução do pai" - http://bit.ly/cTZK10
+                        </li>
+                        <li>
+                        it3s RT @itaucultural O compositor e produtor musical Gilberto Assis fecha a programação de maio do Rumos da Música na TV Cultura. Às 23h40.
+                        </li>
+                    </ul>
+                    <a href="#">ver mais</a>
+                </div>
+                <div id="twitter-bottom">&nbsp;</div>
+                </div>
+                </div>
+            <div style="clear: both;"></div>
+        </div>
+        <div id="footer"><div id="footer-box">
+                $footer
+        </div>
+        </div>
+        </div>
+    </body>
+</html>
