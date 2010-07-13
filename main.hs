@@ -58,7 +58,7 @@ urlInLang dict primDir secDir lang = (transDir primDir) ++ "/" ++ (transDir secD
 
 -- Return the Menu in a lang
 
-menuInLang dirs dict primDir secDir lang = (primMenu ordDirs, secMenu ordDirs)
+menuInLang dirs dict primDir secDir lang = primMenu ordDirs 
   where
     linkName d = case M.lookup d (dict M.! lang) of
                     Nothing -> ("?","?")
@@ -66,27 +66,34 @@ menuInLang dirs dict primDir secDir lang = (primMenu ordDirs, secMenu ordDirs)
 
     ordDirs = map (fmap sort) $ sortBy (\x y -> compare (fst x) (fst y)) dirs
 
-    select d p | p == d    =  " class=\"selected\"" 
-               | otherwise =  ""
+    sec prim sl = "<ul>" ++ (foldl (\s d -> s ++ "<li" ++
+                         ">" ++ slink prim d ++ "</li>\n") "" sl) ++ "</ul>"
 
-    secMenu = concatMap sm  
-
-    sm = \(prim, sec) -> "<ul" ++ select primDir prim ++ " id=\"" ++
-                         (fst $ linkName prim) ++ "\"" ++
-                         (foldl (\s d -> s ++ "<li" ++ select secDir d ++
-                         ">" ++ slink prim d ++ "</li>\n") "" sec) ++ "</ul>"
-
-    slink p s | s == secDir  =  snd $ linkName s
+    slink p s | s == secDir  =  "<span style=\"color: black;\">" ++ 
+                                (snd $ linkName s) ++ "</span>"
               | otherwise    =  "<a href=\"/" ++ url p s ++ "\">" ++ 
                                 (snd $ linkName s) ++ "</a>"
 
+    plink d | d == primDir  =  "<span style=\"color: black;\">" ++ 
+                               (fst $ linkName d) ++ "</span>"
+            | otherwise     =  fst $ linkName d  
+
     url prim sec = urlInLang dict prim sec lang
 
-    primMenu = foldl (\s (d,_) -> s ++ "<li" ++ select primDir d  ++ 
-                                   " id=\"" ++ (fst $ linkName d) ++ 
-                                   "\"><a href=\"javascript:selectMenu('" ++ 
-                                   (fst $ linkName d) ++ "')\">" ++ 
-                                   (snd $ linkName d) ++ "</a></li>\n") ""
+    primMenu = foldl (\s (d,sl) -> s ++ "<div class=\"menuButton\">" ++ 
+                       (plink d) ++ "</div><div class=\"menuContent" ++ 
+                    isSelected d ++ "\">" ++ (sec d sl) ++ "</div>") ""
+
+    isSelected d | d == primDir  =  " selected"
+                 | otherwise     =  ""
+
+-- Return the breadcrumb levels
+
+createBreadCrumb dict primDir secDir lang = bc
+    where bc = (snd $ linkName primDir, snd $ linkName secDir)
+          linkName d = case M.lookup d (dict M.! lang) of
+                          Nothing -> ("?","?")
+                          Just ln -> ln
 
 languages = ["pt", "en", "de"]
 
@@ -109,11 +116,16 @@ main = hakyll "http://it3s.org" $ do
                                 "" -> ""
                                 _  -> '/':secondaryDir
 
-                        menu = createCustomPage "" [ ("menuPrim", Left $ primMenu)
-                                                   , ("menuSec", Left $ secMenu) ] 
+                        menu = createCustomPage "" [ ("menuLeft", Left $ menuContent) ]
 
-                        (primMenu, secMenu) = menuInLang dirs dirsDict 
-                                                         primaryDir secondaryDir lang
+                        breadCrumb = createCustomPage "" [ ("firstLevel", Left fstLevel), 
+                                                           ("secondLevel", Left sndLevel)]
+
+                        (fstLevel, sndLevel) = createBreadCrumb dirsDict primaryDir 
+                                                                secondaryDir lang
+
+                        menuContent = menuInLang dirs dirsDict 
+                                                 primaryDir secondaryDir lang
 
                         footer   = createPage $ "conteudo/" ++ lang ++ 
                                                 ".footer.markdown"
@@ -146,6 +158,8 @@ main = hakyll "http://it3s.org" $ do
                                     menu
                                     `combine`
                                     changeLanguage  
+                                    `combine`
+                                    breadCrumb
         case secondaryDirs of
             [] -> createHtml ""
             _  -> forM_ secondaryDirs createHtml
