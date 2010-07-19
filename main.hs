@@ -66,23 +66,24 @@ menuInLang dirs dict primDir secDir lang = primMenu ordDirs
 
     ordDirs = map (fmap sort) $ sortBy (\x y -> compare (fst x) (fst y)) dirs
 
-    sec prim sl = "<ul>" ++ (foldl (\s d -> s ++ "<li" ++
-                         ">" ++ slink prim d ++ "</li>\n") "" sl) ++ "</ul>"
+    sec prim sl = "<div class=\"menuContent" ++ isSelected prim ++ "\">" ++
+		  "<ul>" ++ (foldl (\s d -> s ++ "<li" ++
+                         ">" ++ slink prim d ++ "</li>\n") "" sl) ++ "</ul></div>"
 
     slink p s | s == secDir  =  "<span style=\"color: black;\">" ++ 
                                 (snd $ linkName s) ++ "</span>"
               | otherwise    =  "<a href=\"/" ++ url p s ++ "\">" ++ 
                                 (snd $ linkName s) ++ "</a>"
 
-    plink d | d == primDir  =  "<span style=\"color: black;\">" ++ 
-                               (fst $ linkName d) ++ "</span>"
-            | otherwise     =  fst $ linkName d  
+    plink d sl | sl == []      =  "<a href=\"/" ++ (snd $ linkName d) ++ "\">" ++ 
+					(fst $ linkName d) ++ "</a>"
+	       | d == primDir  =  "<div class=\"menuButton\"><span style=\"color: black;\">" ++ 
+                               	   (fst $ linkName d) ++ "</span></div>"
+               | otherwise     =  "<div class=\"menuButton\">" ++ (fst $ linkName d) ++ "</div>"
 
     url prim sec = urlInLang dict prim sec lang
 
-    primMenu = foldl (\s (d,sl) -> s ++ "<div class=\"menuButton\">" ++ 
-                       (plink d) ++ "</div><div class=\"menuContent" ++ 
-                    isSelected d ++ "\">" ++ (sec d sl) ++ "</div>") ""
+    primMenu = foldl (\s (d,sl) -> s ++ (plink d sl) ++ (sec d sl)) ""
 
     isSelected d | d == primDir  =  " selected"
                  | otherwise     =  ""
@@ -101,14 +102,14 @@ main = hakyll "http://it3s.org" $ do
     directory css "css"
     directory static "images"
     directory static "js"
-    dirs <- liftIO $ getDirs "conteudo"
-    dirsDict <- liftIO $ dirsDict "conteudo"
-    forM_ dirs $ \(primaryDir, secondaryDirs)  -> do
+    dirsMenu <- liftIO $ getDirs "conteudo/left"
+    dirsMenuDict <- liftIO $ dirsDict "conteudo/left"
+    forM_ dirsMenu $ \(primaryDir, secondaryDirs)  -> do
         let createHtml secondaryDir = 
                 forM_ languages $ \lang -> do
-                    let url = urlInLang dirsDict primaryDir secondaryDir lang
+                    let url = urlInLang dirsMenuDict primaryDir secondaryDir lang
 
-                        textFile l = "conteudo/" ++ primaryDir ++ 
+                        textFile l = "conteudo/left/" ++ primaryDir ++ 
                                     maybeSecondary ++
                                     "/" ++ l ++ ".text.markdown"
                         
@@ -121,10 +122,10 @@ main = hakyll "http://it3s.org" $ do
                         breadCrumb = createCustomPage "" [ ("firstLevel", Left fstLevel), 
                                                            ("secondLevel", Left sndLevel)]
 
-                        (fstLevel, sndLevel) = createBreadCrumb dirsDict primaryDir 
+                        (fstLevel, sndLevel) = createBreadCrumb dirsMenuDict primaryDir 
                                                                 secondaryDir lang
 
-                        menuContent = menuInLang dirs dirsDict 
+                        menuContent = menuInLang dirsMenu dirsMenuDict 
                                                  primaryDir secondaryDir lang
 
                         footer   = createPage $ "conteudo/" ++ lang ++ 
@@ -139,7 +140,7 @@ main = hakyll "http://it3s.org" $ do
                                     if haveFile
                                       then do
                                         return $ "<a href=\"/" ++
-                                                (urlInLang dirsDict primaryDir
+                                                (urlInLang dirsMenuDict primaryDir
                                                            secondaryDir l) ++
                                                 "/\">" ++ l ++ "</a>"
                                       else return ""
