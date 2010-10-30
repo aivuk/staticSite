@@ -75,11 +75,11 @@ menuInLang dirs dict primDir secDir lang = primMenu ordDirs
               | otherwise    =  "<a href=\"/" ++ url p s ++ "\">" ++ 
                                 (snd $ linkName s) ++ "</a>"
 
-    plink d sl | sl == []      =  "<a href=\"/" ++ (snd $ linkName d) ++ "\">" ++ 
-					(fst $ linkName d) ++ "</a>"
+    plink d sl | sl == []      =  "<a href=\"/" ++ (fst $ linkName d) ++ "\">" ++ 
+					(snd $ linkName d) ++ "</a>"
 	       | d == primDir  =  "<div class=\"menuButton\"><span style=\"color: black;\">" ++ 
-                               	   (fst $ linkName d) ++ "</span></div>"
-               | otherwise     =  "<div class=\"menuButton\">" ++ (fst $ linkName d) ++ "</div>"
+                               	   (snd $ linkName d) ++ "</span></div>"
+               | otherwise     =  "<div class=\"menuButton\">" ++ (snd $ linkName d) ++ "</div>"
 
     url prim sec = urlInLang dict prim sec lang
 
@@ -104,6 +104,7 @@ main = hakyll "http://it3s.org" $ do
     directory static "js"
     dirsMenu <- liftIO $ getDirs "conteudo/left"
     dirsMenuDict <- liftIO $ dirsDict "conteudo/left"
+    liftIO $ print $ dirsMenuDict
     forM_ dirsMenu $ \(primaryDir, secondaryDirs)  -> do
         let createHtml secondaryDir = 
                 forM_ languages $ \lang -> do
