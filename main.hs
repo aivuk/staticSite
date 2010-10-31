@@ -11,9 +11,18 @@ import Text.Hakyll.ContextManipulations (renderValue)
 import Text.Hakyll.Context 
 import Text.Hakyll.File (directory)
 import Text.Hakyll.HakyllAction 
-import Data.List (dropWhile, sort, intercalate, sortBy)
+import Data.List (dropWhile, sort, intercalate, sortBy, isPrefixOf)
 import Data.Either
 import qualified Data.Map as M
+
+-- Remove 'sub' from 'string'
+
+remove sub string = remove' "" sub string
+    where
+        remove' acc _ [] = reverse acc
+        remove' acc sub string | sub `isPrefixOf` string = remove' acc sub $ drop sub_len string
+                               | otherwise = remove' (head string:acc) sub $ tail string
+            where sub_len = length sub
 
 -- Get Just Two Levels
 
@@ -91,7 +100,7 @@ menuInLang dirs dict primDir secDir lang = primMenu ordDirs
 -- Return the breadcrumb levels
 
 createBreadCrumb dict primDir secDir lang = bc
-    where bc = (snd $ linkName primDir, snd $ linkName secDir)
+    where bc = (remove "- " $ snd $ linkName primDir, remove "- " $ snd $ linkName secDir)
           linkName d = case M.lookup d (dict M.! lang) of
                           Nothing -> ("?","?")
                           Just ln -> ln
