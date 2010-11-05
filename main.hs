@@ -113,7 +113,6 @@ main = hakyll "http://it3s.org" $ do
     directory static "js"
     dirsMenu <- liftIO $ getDirs "conteudo/left"
     dirsMenuDict <- liftIO $ dirsDict "conteudo/left"
-    liftIO $ print $ dirsMenuDict
     forM_ dirsMenu $ \(primaryDir, secondaryDirs)  -> do
         let createHtml secondaryDir = 
                 forM_ languages $ \lang -> do
